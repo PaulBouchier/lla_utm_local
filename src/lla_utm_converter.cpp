@@ -20,6 +20,9 @@ using namespace std;
 ULConverter::ULConverter() : Node("lla_utm_converter")
 {
   this->declare_parameter("utm_zone", "14n");
+  this->declare_parameter("local_easting_origin", 0.0);
+  this->declare_parameter("local_northing_origin", 0.0);
+
   // TODO: deal with not declaring parameter better
   string zone_param = this->get_parameter("utm_zone").as_string();
   // TODO: test illegal values throw
@@ -34,11 +37,17 @@ ULConverter::ULConverter() : Node("lla_utm_converter")
     throw std::runtime_error("Invalid zone");
   }
 
+  lo_.lo_x = this->get_parameter("local_easting_origin").as_double();
+  lo_.lo_y = this->get_parameter("local_northing_origin").as_double();
+  if (lo_.lo_x != 0.0 || lo_.lo_y != 0.0)
+    RCLCPP_INFO(this->get_logger(), "offsetting UTM by -%0.2f, -%0.2f", lo_.lo_x, lo_.lo_y);
+
   gps_pub_ = this->create_publisher<sensor_msgs::msg::NavSatFix>("gps", 10);
-  xyz_pub_ = this->create_publisher<geometry_msgs::msg::PoseStamped>("utm", 10);
+  utm_pub_ = this->create_publisher<geometry_msgs::msg::PoseStamped>("utm", 10);
+  auto qos = rclcpp::SensorDataQoS();
   gps_sub_ = this->create_subscription<sensor_msgs::msg::NavSatFix>
-    ("gps/fix", 10, std::bind(&ULConverter::GPSCallback, this, _1 ));
-  xyz_sub_ = this->create_subscription<geometry_msgs::msg::PoseStamped>
+    ("fix", qos, std::bind(&ULConverter::GPSCallback, this, _1 ));
+  utm_sub_ = this->create_subscription<geometry_msgs::msg::PoseStamped>
     ("utm_pose", 10, std::bind(&ULConverter::PoseCallback, this, _1 ));
 
   RCLCPP_INFO(this->get_logger(), "lla_utm_local is running");
@@ -46,8 +55,7 @@ ULConverter::ULConverter() : Node("lla_utm_converter")
 
 void ULConverter::GPSCallback(const sensor_msgs::msg::NavSatFix& msg)
 {
-  basic bs;
-  RCLCPP_INFO(this->get_logger(), "Got data from GPS (lat, lon, alt): %f, %f, %f"
+  RCLCPP_DEBUG(this->get_logger(), "Got data from GPS (lat, lon, alt): %f, %f, %f"
     , msg.latitude, msg.longitude, msg.altitude);
 
   double easting;
@@ -66,28 +74,27 @@ void ULConverter::GPSCallback(const sensor_msgs::msg::NavSatFix& msg)
   geometry_msgs::msg::PoseStamped local_pose;
 
   local_pose.header = msg.header;
-  local_pose.pose.position.x = utm_[0] + bs.bx;
-  local_pose.pose.position.y = utm_[1] + bs.by;
-  local_pose.pose.position.z = utm_[2] + bs.bz;
+  local_pose.pose.position.x = utm_[0] - lo_.lo_x;
+  local_pose.pose.position.y = utm_[1] - lo_.lo_y;
+  local_pose.pose.position.z = utm_[2] - lo_.lo_z;
 
-  RCLCPP_INFO(this->get_logger(), "Converted to (n, e, z): %f %f %f"
+  RCLCPP_DEBUG(this->get_logger(), "Converted to (n, e, z): %f %f %f"
     , local_pose.pose.position.x, local_pose.pose.position.y, local_pose.pose.position.z);
 
-  xyz_pub_->publish(local_pose);
+  utm_pub_->publish(local_pose);
 
   utm_.clear();
 }
 
 void ULConverter::PoseCallback(const geometry_msgs::msg::PoseStamped& msg)
 { 
-  basic bs;
   sensor_msgs::msg::NavSatFix gps;
   gps.header = msg.header;
 
   //position in UTM
-  double easting = -bs.bx + msg.pose.position.x ;
-  double northing = -bs.by + msg.pose.position.y ;
-  double pz = -bs.bz + msg.pose.position.z;//height not change, just output unit in meters
+  double easting = lo_.lo_x + msg.pose.position.x ;
+  double northing = lo_.lo_y + msg.pose.position.y ;
+  double pz = lo_.lo_z + msg.pose.position.z;  // copy z into altitude
   RCLCPP_DEBUG(this->get_logger(), "Got UTM data (x, y, z): %f %f %f"
     , easting, northing, pz);
   

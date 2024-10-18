@@ -16,9 +16,9 @@ https://geographiclib.sourceforge.io/
 # Use
 open a terminal and run ros2 launch
 ```
-ros2 launch lla_utm_local lla_utm-launch.py
+ros2 run lla_utm_local lla_utm_local  # publishes utm coordinates on /utm
 or
-ros2 launch lla_utm_local lla_utm-launch.py zero_e:=-594929.9431329881 zero_n:=-4139043.529676078 utm_zone:=12
+ros2 run lla_utm_local lla_utm_local --ros-args -p local_easting_origin:=692360.0 -p local_northing_origin:=13670670.0  # publishes local coordinates on /utm
 ```
 The zero_e (easting reference) and zero_n (northing reference) are optional and if not provided
 default to 0, resulting in UTM coordinates being published. If provided, they define the location

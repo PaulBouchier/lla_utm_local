@@ -22,12 +22,12 @@ class ULConverter : public rclcpp::Node
     std::vector<double> get_lla();
   private:
     // origin point
-    struct basic
+    struct local_origin
     {
-      double bx = 0.0;//-594929.9431329881;//east
-      double by = 0.0;//-4139043.529676078;//north
-      double bz = 0.0;//unit in m
-    };
+      double lo_x = 0.0;//692363.740222;//east
+      double lo_y = 0.0;//13670672.203989;//north
+      double lo_z = 0.0;//unit in m
+    } lo_;
 
     const double kNN_      = 0;
     const double kNS_      = 10000000.0;
@@ -46,9 +46,9 @@ class ULConverter : public rclcpp::Node
     //double utm_[3];
 
     rclcpp::Publisher<sensor_msgs::msg::NavSatFix>::SharedPtr gps_pub_;
-    rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr xyz_pub_;
+    rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr utm_pub_;
     rclcpp::Subscription<sensor_msgs::msg::NavSatFix>::SharedPtr gps_sub_;
-    rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr xyz_sub_;
+    rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr utm_sub_;
 
     int zone_;
     std::string hemi_;
