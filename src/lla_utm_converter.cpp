@@ -1,9 +1,5 @@
 #include "lla_utm_converter.hpp"
 
-//#include "tf/transform_datatypes.h"//for tf, getYaw
-//#include "std_msgs/Float64.h"
-//#include "std_msgs/Float64MultiArray.h"
-
 #include <cstdio>
 #include <chrono>
 #include <functional>
