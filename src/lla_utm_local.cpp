@@ -1,10 +1,11 @@
-#include <cstdio>
+#include "lla_utm_converter.hpp"
 
-int main(int argc, char ** argv)
+int main(int argc, char * argv[])
 {
-  (void) argc;
-  (void) argv;
+  rclcpp::init(argc, argv);
 
-  printf("hello world lla_utm_local package\n");
+  rclcpp::spin(std::make_shared<ULConverter>());
+
+  rclcpp::shutdown();
   return 0;
 }

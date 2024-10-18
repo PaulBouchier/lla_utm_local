@@ -7,14 +7,21 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
-# uncomment the following section in order to fill in
-# further dependencies manually.
-# find_package(<dependency> REQUIRED)
 
-add_executable(lla_utm_local src/lla_utm_local.cpp)
+find_package(rclcpp REQUIRED)
+find_package(GeographicLib REQUIRED)
+find_package(sensor_msgs REQUIRED)
+find_package(geometry_msgs REQUIRED)
+
+include_directories(include/lla_utm_local)
+
+add_executable(lla_utm_local src/lla_utm_local.cpp src/lla_utm_converter.cpp)
+ament_target_dependencies(lla_utm_local rclcpp GeographicLib sensor_msgs geometry_msgs)
+
 target_include_directories(lla_utm_local PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
+
 target_compile_features(lla_utm_local PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
 
 install(TARGETS lla_utm_local
