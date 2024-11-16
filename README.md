@@ -27,4 +27,4 @@ from which coordinates as offsets in meters will be published.
 If you want to convert LLA to UTM, publish your message to topic `/gps/fix`, ros message type `sensor_msgs::NavSatFix`. If you want to convert UTM to LLA, publish your message to topic `/utm/pose`, ros message type `geometry_msgs::PoseStamped`
 
 # Credits
-This package is a port of https://github.com/arpg/ROS-UTM-LLA to ROS2
+This package is a port of https://github.com/arpg/ROS-UTM-LLA to ROS2.
